@@ -1,9 +1,5 @@
 import { useMemo } from "react"
 import { useSearchParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
-
-import { getHeroes } from "@/heroes/actions/get-heroes"
-
 import {
   Heart,
 } from "lucide-react"
@@ -14,28 +10,28 @@ import { SearchControls } from "../search/ui/SearchControls"
 import { HeroGrid } from "@/heroes/components/HeroGrid"
 import { Pagination } from "@/components/custom/Pagination"
 import { CustomBreadcrumb } from "@/components/custom/CustomBreadcrumb"
+import { useHeroSummary } from "@/hooks/useHeroSummary"
+import { useHero } from "@/hooks/useHero"
 // import Image from "next/image"
 
 export const HomePage = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activeTab = searchParams.get('tab') ?? 'all';
+  const activeTab = searchParams.get('category') ?? 'all';
 
   const page = searchParams.get('page') ?? '1';
   const limit = searchParams.get('limit') ?? '6';
 
   const selectedTab = useMemo(() => {
-    const validateTab = ['all','favorites','heroes','villains']
+    const validateTab = ['all','favorites','hero','villain']
 
     return validateTab.includes(activeTab) ? activeTab : 'all'
   }, [activeTab])
 
-  const { data } = useQuery({
-    queryKey : ['heroes', {page, limit}],
-    queryFn : () => getHeroes(+page, +limit),
-    staleTime: 1000 * 60 * 5,
-  })
+  const { data  } = useHero(page, limit, activeTab);
+
+  const { data : dataSumary  } = useHeroSummary();
 
   return (
     <>
@@ -60,24 +56,24 @@ export const HomePage = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger 
               value="all"
-              onClick={() => setSearchParams('?tab=all')}
-            >All Characters (16)</TabsTrigger>
+              onClick={() => setSearchParams('?category=all')}
+            >All Characters ({dataSumary?.totalHeroes})</TabsTrigger>
             <TabsTrigger 
               value="favorites"
-              onClick={() => setSearchParams('?tab=favorites')}
+              onClick={() => setSearchParams('?category=favorites')}
               className="flex items-center gap-2
             ">
               <Heart className="h-4 w-4" />
               Favorites (3)
             </TabsTrigger>
             <TabsTrigger 
-              value="heroes"
-              onClick={() => setSearchParams('?tab=heroes')}
-            >Heroes (12)</TabsTrigger>
+              value="hero"
+              onClick={() => setSearchParams('?category=hero')}
+            >Heroes ({dataSumary?.heroCount})</TabsTrigger>
             <TabsTrigger 
-              value="villains"
-              onClick={() => setSearchParams('?tab=villains')}
-            >Villains (2)</TabsTrigger>
+              value="villain"
+              onClick={() => setSearchParams('?category=villain')}
+            >Villains ({dataSumary?.villainCount})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
@@ -91,14 +87,16 @@ export const HomePage = () => {
             <h1>Favoritos</h1>
           </TabsContent>
 
-          <TabsContent value="heroes">
+          <TabsContent value="hero">
             {/* Heroes */}
             <h1>Heroes</h1>
+            <HeroGrid heroes={data?.heroes ?? []} />
           </TabsContent>
 
-          <TabsContent value="villains">
+          <TabsContent value="villain">
             {/* Villanos */}
             <h1>Villanos</h1>
+            <HeroGrid heroes={data?.heroes ?? []} />
           </TabsContent>
         </Tabs>
 

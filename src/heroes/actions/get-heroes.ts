@@ -5,7 +5,8 @@ const BASE_URL = import.meta.env.VITE_API_URL
 
 export const getHeroes = async (
   page : number,
-  limit : number = 6
+  limit : number = 6,
+  category? : string
 ) : Promise<IHeroesResponse> => {
 
   if(isNaN(page)){
@@ -17,7 +18,8 @@ export const getHeroes = async (
       limit : limit,
       // (1 - 1) * 6 = 0 
       // (2 - 1) * 6 = 6 
-      offset : (page - 1) * limit
+      offset : (page - 1) * limit,
+      category
     }
   })
   
